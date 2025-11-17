@@ -22,30 +22,17 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Respawn")
     FVector LastCheckpoint;
 
+    bool isCharging;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-    // Push system
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Push")
-    float PushRaycastDistance;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Push")
-    float PushRaycastRadius;
-
-    UPROPERTY(BlueprintReadOnly, Category = "Push")
-    class APushableActor* CurrentPushable;
-
-    UPROPERTY(BlueprintReadOnly, Category = "Push")
-    bool bIsPushing;
-
     UPROPERTY(BlueprintReadWrite, Category = "Moving")
     bool isMoving;
 
+    void StartCharge();
 
-    void CheckForPushable();
-    void StartPushing();
-    void StopPushing();
     void Jump();
 
 public:	
@@ -71,30 +58,6 @@ public:
     void LookUp(float Value);
     void Turn(float Value);
 
-    // Roll/Dodge
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-    float RollDistance;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-    float RollDuration;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-    float RollCooldown;
-
-    UPROPERTY(BlueprintReadOnly, Category = "Combat")
-    bool bIsRolling;
-
-    UPROPERTY(BlueprintReadOnly, Category = "Combat")
-    bool bCanRoll;
-
-    UFUNCTION(BlueprintCallable, Category = "Combat")
-    void PerformRoll();
-
 private:
-    FTimerHandle RollTimerHandle;
-    FTimerHandle RollCooldownTimerHandle;
-
-    void EndRoll();
-    void ResetRollCooldown();
 
 };
