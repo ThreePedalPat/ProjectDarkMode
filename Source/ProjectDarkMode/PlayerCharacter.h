@@ -19,28 +19,11 @@ public:
 	// Sets default values for this character's properties
 	APlayerCharacter();
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Respawn")
-    FVector LastCheckpoint;
+    // Called every frame
+    virtual void Tick(float DeltaTime) override;
 
-    bool isCharging;
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-    UPROPERTY(BlueprintReadWrite, Category = "Moving")
-    bool isMoving;
-
-    void StartCharge();
-
-    void Jump();
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    // Called to bind functionality to input
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
     // Components
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
@@ -58,6 +41,30 @@ public:
     void LookUp(float Value);
     void Turn(float Value);
 
-private:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Respawn")
+    FVector LastCheckpoint;
 
+    UPROPERTY(BlueprintReadWrite)
+    bool isCharging;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charge Ability")
+    float chargeSpeed;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charge Ability")
+    float chargeTurnMod;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+    UPROPERTY(BlueprintReadWrite, Category = "Moving")
+    bool isMoving;
+
+    void StartCharge();
+    void StopCharge();
+
+    void Jump();
+
+private:
+    float normalSpeed;
 };

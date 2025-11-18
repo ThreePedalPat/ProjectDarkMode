@@ -37,6 +37,7 @@ APlayerCharacter::APlayerCharacter()
     GetCharacterMovement()->GravityScale = 1.5f;
     GetCharacterMovement()->MaxWalkSpeed = 600.0f;
     GetCharacterMovement()->BrakingDecelerationWalking = 2048.0f;
+
     JumpMaxHoldTime = 0.3f;
 
     // Don't rotate character with camera
@@ -71,6 +72,35 @@ void APlayerCharacter::Tick(float DeltaTime)
         GetCharacterMovement()->JumpZVelocity = Stats->GetJumpPower();
     }
 
+    if (isCharging)
+    {
+        AddMovementInput(GetActorForwardVector(), 100);
+
+        // Raycast in front of character to detect obstacles
+        FVector Start = GetActorLocation();
+        FVector ForwardVector = GetActorForwardVector();
+        FVector End = Start + (ForwardVector * 50);
+        // Use a sphere trace for more forgiving detection
+        FHitResult HitResult;
+        FCollisionQueryParams QueryParams;
+        QueryParams.AddIgnoredActor(this);
+        bool bHit = GetWorld()->SweepSingleByChannel(
+            HitResult,
+            Start,
+            End,
+            FQuat::Identity,
+            ECC_WorldDynamic,
+            FCollisionShape::MakeSphere(50),
+            QueryParams
+        );
+
+        if (bHit)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "You hit a wall!");
+            StopCharge();
+        }
+    }
+
     isMoving = GetCharacterMovement()->IsMovingOnGround();
 }
 
@@ -91,8 +121,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::Jump);
     PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
-    // Roll
+    // Charge
     PlayerInputComponent->BindAction("Charge", IE_Pressed, this, &APlayerCharacter::StartCharge);
+    PlayerInputComponent->BindAction("Charge", IE_Released, this, &APlayerCharacter::StopCharge);
 
 }
 
@@ -134,12 +165,32 @@ void APlayerCharacter::LookUp(float Value)
 
 void APlayerCharacter::Turn(float Value)
 {
-    AddControllerYawInput(Value);
+    if (isCharging)
+    {
+        AddControllerYawInput(Value * chargeTurnMod);
+    }
+    else
+    {
+        AddControllerYawInput(Value);
+    }
 }
 
 void APlayerCharacter::StartCharge()
 {
+    isCharging = true;
+    normalSpeed = GetCharacterMovement()->MaxWalkSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = chargeSpeed;
+    bUseControllerRotationYaw = true;
+}
 
+void APlayerCharacter::StopCharge()
+{
+    if (isCharging)
+    {
+        isCharging = false;
+        GetCharacterMovement()->MaxWalkSpeed = normalSpeed;
+        bUseControllerRotationYaw = false;
+    }
 }
 
 
