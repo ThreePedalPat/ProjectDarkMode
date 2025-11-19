@@ -64,7 +64,10 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+    if (isStunned)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 0.2f, FColor::Green, "Stunned");
+    }
     // Update movement speed from stats
     if (Stats)
     {
@@ -97,7 +100,17 @@ void APlayerCharacter::Tick(float DeltaTime)
         if (bHit)
         {
             GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "You hit a wall!");
+            triggerCrash = true;
+            isStunned = true;
             StopCharge();
+            // Reset after a short delay (0.1 seconds)
+            GetWorld()->GetTimerManager().SetTimer(
+                CrashResetTimer,
+                this,
+                &APlayerCharacter::ResetCrashTrigger,
+                0.1f,
+                false
+            );
         }
     }
 
@@ -138,7 +151,7 @@ void APlayerCharacter::Jump()
 
 void APlayerCharacter::MoveForward(float Value)
 {
-    if (Controller && Value != 0.0f && !isCharging)
+    if (Controller && Value != 0.0f && !isCharging && !isStunned)
     {
         const FRotator Rotation = Controller->GetControlRotation();
         const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -149,7 +162,7 @@ void APlayerCharacter::MoveForward(float Value)
 
 void APlayerCharacter::MoveRight(float Value)
 {
-    if (Controller && Value != 0.0f && !isCharging)
+    if (Controller && Value != 0.0f && !isCharging && !isStunned)
     {
         const FRotator Rotation = Controller->GetControlRotation();
         const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -191,6 +204,11 @@ void APlayerCharacter::StopCharge()
         GetCharacterMovement()->MaxWalkSpeed = normalSpeed;
         bUseControllerRotationYaw = false;
     }
+}
+
+void APlayerCharacter::ResetCrashTrigger()
+{
+    triggerCrash = false;
 }
 
 

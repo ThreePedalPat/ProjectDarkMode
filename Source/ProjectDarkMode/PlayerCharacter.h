@@ -45,7 +45,13 @@ public:
     FVector LastCheckpoint;
 
     UPROPERTY(BlueprintReadWrite)
+    bool isStunned;
+
+    UPROPERTY(BlueprintReadWrite)
     bool isCharging;
+
+    UPROPERTY(BlueprintReadWrite)
+    bool triggerCrash;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charge Ability")
     float chargeSpeed;
@@ -62,7 +68,9 @@ protected:
 
     void StartCharge();
     void StopCharge();
+    void ResetCrashTrigger();
 
+    FTimerHandle CrashResetTimer;
     void Jump();
 
 private:
