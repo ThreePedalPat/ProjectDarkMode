@@ -92,5 +92,8 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
     APlayerCharacter* myBody;
+    FTimerHandle hurtResetTimer;
+
+    void ResetHurt();
 		
 };

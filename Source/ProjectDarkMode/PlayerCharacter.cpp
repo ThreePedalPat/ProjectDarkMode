@@ -190,10 +190,13 @@ void APlayerCharacter::Turn(float Value)
 
 void APlayerCharacter::StartCharge()
 {
-    isCharging = true;
-    normalSpeed = GetCharacterMovement()->MaxWalkSpeed;
-    GetCharacterMovement()->MaxWalkSpeed = chargeSpeed;
-    bUseControllerRotationYaw = true;
+    if (!isStunned)
+    {
+        isCharging = true;
+        normalSpeed = GetCharacterMovement()->MaxWalkSpeed;
+        GetCharacterMovement()->MaxWalkSpeed = chargeSpeed;
+        bUseControllerRotationYaw = true;
+    }
 }
 
 void APlayerCharacter::StopCharge()
@@ -209,6 +212,11 @@ void APlayerCharacter::StopCharge()
 void APlayerCharacter::ResetCrashTrigger()
 {
     triggerCrash = false;
+}
+
+void APlayerCharacter::ResetHurtTrigger()
+{
+    triggerHurt = false;
 }
 
 

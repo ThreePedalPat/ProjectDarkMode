@@ -53,11 +53,16 @@ public:
     UPROPERTY(BlueprintReadWrite)
     bool triggerCrash;
 
+    UPROPERTY(BlueprintReadWrite)
+    bool triggerHurt;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charge Ability")
     float chargeSpeed;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charge Ability")
     float chargeTurnMod;
+
+    void ResetHurtTrigger();
 
 protected:
 	// Called when the game starts or when spawned

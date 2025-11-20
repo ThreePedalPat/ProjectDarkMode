@@ -95,6 +95,17 @@ void UStatComponent::TakeDamage(int damage)
     else
     {
         CurrentHealth -= damage;
+        if (myBody)
+        {
+            myBody->triggerHurt = true;
+            GetWorld()->GetTimerManager().SetTimer(hurtResetTimer, this, &UStatComponent::ResetHurt, 0.1f, false);
+        }
+        else
+        {
+            myBody = Cast<APlayerCharacter>(GetOwner());
+            myBody->triggerHurt = true;
+            GetWorld()->GetTimerManager().SetTimer(hurtResetTimer, this, &UStatComponent::ResetHurt, 0.1f, false);
+        }
     }
 }
 
@@ -103,6 +114,11 @@ void UStatComponent::Death()
     CurrentHealth = 0;
     GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Green, "You Died...Noob");
     UGameplayStatics::SetGamePaused(GetWorld(), true);
+}
+
+void UStatComponent::ResetHurt()
+{
+    myBody->ResetHurtTrigger();
 }
 
 
