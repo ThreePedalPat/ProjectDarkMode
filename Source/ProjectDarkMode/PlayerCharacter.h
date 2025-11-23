@@ -4,11 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "NiagaraSystem.h"
+#include "NiagaraComponent.h"
 #include "PlayerCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
 class UStatComponent;
+class UNiagaraSystem;
+class UNiagaraComponent;
 
 UCLASS()
 class PROJECTDARKMODE_API APlayerCharacter : public ACharacter
@@ -35,11 +39,20 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
     UStatComponent* Stats;
 
+    UPROPERTY(EditDefaultsOnly, Category = "VFX")
+    UNiagaraSystem* ChargeParticleSystem;
+
+    UPROPERTY()
+    UNiagaraComponent* ActiveChargeEffect;
+
     // Movement
     void MoveForward(float Value);
     void MoveRight(float Value);
     void LookUp(float Value);
     void Turn(float Value);
+
+    UFUNCTION(BlueprintCallable)
+    void StompDamage();
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Respawn")
     FVector LastCheckpoint;
@@ -54,6 +67,9 @@ public:
     bool triggerCrash;
 
     UPROPERTY(BlueprintReadWrite)
+    bool triggerStomp;
+
+    UPROPERTY(BlueprintReadWrite)
     bool triggerHurt;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charge Ability")
@@ -61,6 +77,12 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charge Ability")
     float chargeTurnMod;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stomp Ability")
+    int stompDmg;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stomp Ability")
+    float stompRange;
 
     void ResetHurtTrigger();
 
@@ -74,10 +96,13 @@ protected:
     void StartCharge();
     void StopCharge();
     void ResetCrashTrigger();
-
+    void ResetStompTrigger();
+    void Stomp();
     FTimerHandle CrashResetTimer;
+    FTimerHandle stompResetTimer;
     void Jump();
 
 private:
     float normalSpeed;
+
 };

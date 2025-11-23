@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "StatComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "PushableActor.h"
 
 // Sets default values
@@ -82,7 +83,7 @@ void APlayerCharacter::Tick(float DeltaTime)
         // Raycast in front of character to detect obstacles
         FVector Start = GetActorLocation();
         FVector ForwardVector = GetActorForwardVector();
-        FVector End = Start + (ForwardVector * 50);
+        FVector End = Start + (ForwardVector * 75);
         // Use a sphere trace for more forgiving detection
         FHitResult HitResult;
         FCollisionQueryParams QueryParams;
@@ -99,18 +100,33 @@ void APlayerCharacter::Tick(float DeltaTime)
 
         if (bHit)
         {
-            GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "You hit a wall!");
-            triggerCrash = true;
-            isStunned = true;
-            StopCharge();
-            // Reset after a short delay (0.1 seconds)
-            GetWorld()->GetTimerManager().SetTimer(
-                CrashResetTimer,
-                this,
-                &APlayerCharacter::ResetCrashTrigger,
-                0.1f,
-                false
-            );
+            if (HitResult.GetActor())
+            {
+                AActor* hitActor = HitResult.GetActor();
+                if (hitActor->ActorHasTag("Enemy"))
+                {
+                    //continue charging and launch enemy/deal damage
+                }
+                else if (hitActor->ActorHasTag("Breakable"))
+                {
+                    hitActor->Destroy();
+                }
+                else
+                {
+                    GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "You hit a wall!");
+                    triggerCrash = true;
+                    isStunned = true;
+                    StopCharge();
+                    // Reset after a short delay (0.1 seconds)
+                        GetWorld()->GetTimerManager().SetTimer(
+                            CrashResetTimer,
+                            this,
+                            &APlayerCharacter::ResetCrashTrigger,
+                            0.1f,
+                            false
+                        );
+                }
+            }
         }
     }
 
@@ -138,6 +154,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     PlayerInputComponent->BindAction("Charge", IE_Pressed, this, &APlayerCharacter::StartCharge);
     PlayerInputComponent->BindAction("Charge", IE_Released, this, &APlayerCharacter::StopCharge);
 
+    // Stomp
+    PlayerInputComponent->BindAction("Stomp", IE_Pressed, this, &APlayerCharacter::Stomp);
 }
 
 void APlayerCharacter::Jump()
@@ -217,6 +235,59 @@ void APlayerCharacter::ResetCrashTrigger()
 void APlayerCharacter::ResetHurtTrigger()
 {
     triggerHurt = false;
+}
+
+void APlayerCharacter::ResetStompTrigger()
+{
+    triggerStomp = false;
+}
+
+void APlayerCharacter::Stomp()
+{
+    triggerStomp = true;
+
+
+    GetWorld()->GetTimerManager().SetTimer(stompResetTimer, this, &APlayerCharacter::ResetStompTrigger, 0.1f, false);
+}
+
+void APlayerCharacter::StompDamage()
+{
+    FCollisionShape sphere = FCollisionShape::MakeSphere(stompRange);
+    FCollisionQueryParams query;
+    query.AddIgnoredActor(this);
+    TArray<FHitResult> hit;
+
+    if (ChargeParticleSystem)
+    {
+        // Spawn attached to a socket (e.g., hand, chest, feet)
+        UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+            GetWorld(),
+            ChargeParticleSystem,
+            GetActorLocation(),
+            FRotator::ZeroRotator,
+            FVector(1.0f),
+            true
+        );
+    }
+
+    bool bHit = GetWorld()->SweepMultiByChannel(hit, GetActorLocation(), GetActorLocation(), FQuat::Identity, ECC_Visibility, sphere, query);
+    GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Stomped!");
+    if (bHit)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Stomp hit something!");
+        for (size_t i = 0; i < hit.Num(); i++)
+        {
+            if (hit[i].GetActor())
+            {
+                AActor* hitActor = hit[i].GetActor();
+                if (hitActor->ActorHasTag("Enemy"))
+                {
+                    GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Destroyed an enemy!");
+                    hitActor->Destroy();
+                }
+            }
+        }
+    }
 }
 
 
