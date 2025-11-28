@@ -11,6 +11,7 @@
 #include "Camera/CameraShakeBase.h"
 #include "Camera/CameraTypes.h"
 #include "PushableActor.h"
+#include "Landscape.h"
 #include "Breakable.h"
 
 // Sets default values
@@ -299,6 +300,36 @@ void APlayerCharacter::StompDamage()
 
     if (StompParticleSystem)
     {
+        FHitResult hit2;
+        FVector end = GetActorLocation() - FVector(0, 0, 100);
+        FCollisionQueryParams query2;
+        query2.bReturnPhysicalMaterial = true;
+        query2.AddIgnoredActor(this);
+        if (GetWorld()->LineTraceSingleByChannel(hit2, GetActorLocation(), end, ECC_Visibility, query2))
+        {
+            UPhysicalMaterial* physMat = hit2.PhysMaterial.Get();
+            if (physMat)
+            {
+                GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "found phys material!");
+            }
+            if (physMat == grassMat)
+            {
+                GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Stomped on grass!");
+                StompParticleSystem = grassParticleSystem;
+            }
+
+            if (physMat == dirtMat)
+            {
+                GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Stomped on dirt!");
+                StompParticleSystem = dirtParticleSystem;
+            }
+
+            if (physMat == rockMat)
+            {
+                GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Stomped on rock!");
+                StompParticleSystem = rockParticleSystem;
+            }
+        }
         UNiagaraFunctionLibrary::SpawnSystemAtLocation(
             GetWorld(),
             StompParticleSystem,

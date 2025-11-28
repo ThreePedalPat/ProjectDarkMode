@@ -42,6 +42,15 @@ public:
     UPROPERTY(EditAnywhere, Category = "VFX")
     UNiagaraSystem* StompParticleSystem;
 
+    UPROPERTY(EditAnywhere, Category = "VFX")
+    UNiagaraSystem* grassParticleSystem;
+
+    UPROPERTY(EditAnywhere, Category = "VFX")
+    UNiagaraSystem* dirtParticleSystem;
+
+    UPROPERTY(EditAnywhere, Category = "VFX")
+    UNiagaraSystem* rockParticleSystem;
+
     UPROPERTY()
     UNiagaraComponent* ActiveChargeEffect;
 
@@ -50,6 +59,15 @@ public:
 
     UPROPERTY(EditAnywhere, Category = "Cam Shake")
     TSubclassOf<UCameraShakeBase> stompCamShake;
+
+    UPROPERTY(EditAnywhere, Category = "Landscape Refs")
+    UPhysicalMaterial* grassMat;
+
+    UPROPERTY(EditAnywhere, Category = "Landscape Refs")
+    UPhysicalMaterial* dirtMat;
+
+    UPROPERTY(EditAnywhere, Category = "Landscape Refs")
+    UPhysicalMaterial* rockMat;
 
     // Movement
     void MoveForward(float Value);
