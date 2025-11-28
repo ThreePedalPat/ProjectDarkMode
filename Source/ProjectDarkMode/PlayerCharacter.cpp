@@ -7,7 +7,11 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "StatComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Kismet/KismetStringLibrary.h"
+#include "Camera/CameraShakeBase.h"
+#include "Camera/CameraTypes.h"
 #include "PushableActor.h"
+#include "Breakable.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -67,7 +71,15 @@ void APlayerCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
     if (isStunned)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 0.2f, FColor::Green, "Stunned");
+        //temporary fix to infinite stun bug
+        //stunTimer += DeltaTime;
+        //if (stunTimer > 1.5f)
+        //{
+        //    isStunned = false;
+        //    stunTimer = 0;
+        //}
+        GEngine->AddOnScreenDebugMessage(-1, 0.2f, FColor::Green, UKismetStringLibrary::Conv_BoolToString(isStunned) + UKismetStringLibrary::Conv_BoolToString(triggerCrash) + UKismetStringLibrary::Conv_BoolToString(isCharging));
+         
     }
     // Update movement speed from stats
     if (Stats)
@@ -83,7 +95,7 @@ void APlayerCharacter::Tick(float DeltaTime)
         // Raycast in front of character to detect obstacles
         FVector Start = GetActorLocation();
         FVector ForwardVector = GetActorForwardVector();
-        FVector End = Start + (ForwardVector * 75);
+        FVector End = Start + (ForwardVector * 60);
         // Use a sphere trace for more forgiving detection
         FHitResult HitResult;
         FCollisionQueryParams QueryParams;
@@ -103,16 +115,43 @@ void APlayerCharacter::Tick(float DeltaTime)
             if (HitResult.GetActor())
             {
                 AActor* hitActor = HitResult.GetActor();
+                APlayerCameraManager* camManager = GetWorld()->GetFirstPlayerController()->PlayerCameraManager;
                 if (hitActor->ActorHasTag("Enemy"))
                 {
                     //continue charging and launch enemy/deal damage
                 }
                 else if (hitActor->ActorHasTag("Breakable"))
                 {
+                    UBreakable* actorBreakable = hitActor->GetComponentByClass<UBreakable>();
+                    if (actorBreakable)
+                    {
+                        if (actorBreakable->BreakableParticleSystem)
+                        {
+                            UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+                                GetWorld(),
+                                actorBreakable->BreakableParticleSystem,
+                                hitActor->GetActorLocation(),
+                                FRotator::ZeroRotator,
+                                FVector(1.0f),
+                                true
+                            );
+                        }
+
+                        if (actorBreakable->breakableCamShake)
+                        {
+                            //shake cam according to breakable
+                            camManager->StartCameraShake(actorBreakable->breakableCamShake, 1.0f);
+                        }
+                    }
+
                     hitActor->Destroy();
                 }
                 else
                 {
+
+                    //play crash cam shake
+                    camManager->StartCameraShake(crashCamShake, 1.0f);
+
                     GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "You hit a wall!");
                     triggerCrash = true;
                     isStunned = true;
@@ -227,6 +266,7 @@ void APlayerCharacter::StopCharge()
     }
 }
 
+
 void APlayerCharacter::ResetCrashTrigger()
 {
     triggerCrash = false;
@@ -257,12 +297,11 @@ void APlayerCharacter::StompDamage()
     query.AddIgnoredActor(this);
     TArray<FHitResult> hit;
 
-    if (ChargeParticleSystem)
+    if (StompParticleSystem)
     {
-        // Spawn attached to a socket (e.g., hand, chest, feet)
         UNiagaraFunctionLibrary::SpawnSystemAtLocation(
             GetWorld(),
-            ChargeParticleSystem,
+            StompParticleSystem,
             GetActorLocation(),
             FRotator::ZeroRotator,
             FVector(1.0f),
@@ -270,8 +309,14 @@ void APlayerCharacter::StompDamage()
         );
     }
 
+    APlayerCameraManager* camMan = GetWorld()->GetFirstPlayerController()->PlayerCameraManager;
+    camMan->StartCameraShake(stompCamShake, 1.0f);
+
+
     bool bHit = GetWorld()->SweepMultiByChannel(hit, GetActorLocation(), GetActorLocation(), FQuat::Identity, ECC_Visibility, sphere, query);
-    GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Stomped!");
+
+    GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Stomped and shaken!");
+
     if (bHit)
     {
         GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Stomp hit something!");

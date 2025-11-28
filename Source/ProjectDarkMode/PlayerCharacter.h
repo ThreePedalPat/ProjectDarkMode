@@ -39,11 +39,17 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
     UStatComponent* Stats;
 
-    UPROPERTY(EditDefaultsOnly, Category = "VFX")
-    UNiagaraSystem* ChargeParticleSystem;
+    UPROPERTY(EditAnywhere, Category = "VFX")
+    UNiagaraSystem* StompParticleSystem;
 
     UPROPERTY()
     UNiagaraComponent* ActiveChargeEffect;
+
+    UPROPERTY(EditAnywhere, Category = "Cam Shake")
+    TSubclassOf<UCameraShakeBase> crashCamShake;
+
+    UPROPERTY(EditAnywhere, Category = "Cam Shake")
+    TSubclassOf<UCameraShakeBase> stompCamShake;
 
     // Movement
     void MoveForward(float Value);
@@ -83,6 +89,8 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stomp Ability")
     float stompRange;
+
+    float stunTimer;
 
     void ResetHurtTrigger();
 
