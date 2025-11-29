@@ -12,6 +12,7 @@
 #include "Camera/CameraTypes.h"
 #include "PushableActor.h"
 #include "Landscape.h"
+#include "StompParticlesHelper.h"
 #include "Breakable.h"
 
 // Sets default values
@@ -73,12 +74,12 @@ void APlayerCharacter::Tick(float DeltaTime)
     if (isStunned)
     {
         //temporary fix to infinite stun bug
-        //stunTimer += DeltaTime;
-        //if (stunTimer > 1.5f)
-        //{
-        //    isStunned = false;
-        //    stunTimer = 0;
-        //}
+        stunTimer += DeltaTime;
+        if (stunTimer > 1.5f)
+        {
+            isStunned = false;
+            stunTimer = 0;
+        }
         GEngine->AddOnScreenDebugMessage(-1, 0.2f, FColor::Green, UKismetStringLibrary::Conv_BoolToString(isStunned) + UKismetStringLibrary::Conv_BoolToString(triggerCrash) + UKismetStringLibrary::Conv_BoolToString(isCharging));
          
     }
@@ -301,12 +302,14 @@ void APlayerCharacter::StompDamage()
     if (StompParticleSystem)
     {
         FHitResult hit2;
-        FVector end = GetActorLocation() - FVector(0, 0, 100);
+        FVector end = GetActorLocation() - FVector(0, 0, 200);
         FCollisionQueryParams query2;
         query2.bReturnPhysicalMaterial = true;
+        bool defaultSystemReplaced;
         query2.AddIgnoredActor(this);
-        if (GetWorld()->LineTraceSingleByChannel(hit2, GetActorLocation(), end, ECC_Visibility, query2))
+        if (GetWorld()->SweepSingleByChannel(hit2, GetActorLocation(), end, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeSphere(50), query2))
         {
+            //handle particles for landscape
             UPhysicalMaterial* physMat = hit2.PhysMaterial.Get();
             if (physMat)
             {
@@ -316,20 +319,37 @@ void APlayerCharacter::StompDamage()
             {
                 GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Stomped on grass!");
                 StompParticleSystem = grassParticleSystem;
+                defaultSystemReplaced = true;
             }
 
             if (physMat == dirtMat)
             {
                 GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Stomped on dirt!");
                 StompParticleSystem = dirtParticleSystem;
+                defaultSystemReplaced = true;
             }
 
             if (physMat == rockMat)
             {
                 GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Stomped on rock!");
                 StompParticleSystem = rockParticleSystem;
+                defaultSystemReplaced = true;
+            }
+
+
+            //handle particles for actors
+            if (hit2.GetActor()->FindComponentByClass<UStompParticlesHelper>())
+            {
+                StompParticleSystem = hit2.GetActor()->FindComponentByClass<UStompParticlesHelper>()->system;
+                defaultSystemReplaced = true;
+            }
+
+            if (!defaultSystemReplaced && defaultActorParticleSystem)
+            {
+                StompParticleSystem = defaultActorParticleSystem;
             }
         }
+
         UNiagaraFunctionLibrary::SpawnSystemAtLocation(
             GetWorld(),
             StompParticleSystem,

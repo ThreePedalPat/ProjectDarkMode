@@ -51,6 +51,9 @@ public:
     UPROPERTY(EditAnywhere, Category = "VFX")
     UNiagaraSystem* rockParticleSystem;
 
+    UPROPERTY(EditAnywhere, Category = "VFX")
+    UNiagaraSystem* defaultActorParticleSystem;
+
     UPROPERTY()
     UNiagaraComponent* ActiveChargeEffect;
 
