@@ -11,8 +11,8 @@
 #include "Camera/CameraShakeBase.h"
 #include "Camera/CameraTypes.h"
 #include "PushableActor.h"
-#include "Landscape.h"
 #include "StompParticlesHelper.h"
+#include "Breakable_Collectable.h"
 #include "Breakable.h"
 
 // Sets default values
@@ -380,6 +380,14 @@ void APlayerCharacter::StompDamage()
                 {
                     GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Destroyed an enemy!");
                     hitActor->Destroy();
+                }
+                if (hitActor->ActorHasTag("Collectable"))
+                {
+                    ABreakable_Collectable* breakable = Cast<ABreakable_Collectable>(hitActor);
+                    if (breakable)
+                    {
+                        breakable->GetDamaged();
+                    }
                 }
             }
         }
