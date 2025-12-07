@@ -17,12 +17,12 @@ public:
 	// Sets default values for this component's properties
 	URotatorComponent();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotator")
+	FRotator rot;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotator")
-	FRotator rot;
 	
 	AActor* myActor;
 

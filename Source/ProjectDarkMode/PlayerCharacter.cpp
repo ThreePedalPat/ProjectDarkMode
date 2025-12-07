@@ -122,7 +122,8 @@ void APlayerCharacter::Tick(float DeltaTime)
                 {
                     //continue charging and launch enemy/deal damage
                 }
-                else if (hitActor->ActorHasTag("Breakable"))
+                
+                if (hitActor->ActorHasTag("Breakable"))
                 {
                     UBreakable* actorBreakable = hitActor->GetComponentByClass<UBreakable>();
                     if (actorBreakable)
@@ -148,24 +149,20 @@ void APlayerCharacter::Tick(float DeltaTime)
 
                     hitActor->Destroy();
                 }
-                else
+
+                if (hitActor->ActorHasTag("Collectable"))
                 {
-
-                    //play crash cam shake
-                    camManager->StartCameraShake(crashCamShake, 1.0f);
-
-                    GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "You hit a wall!");
-                    triggerCrash = true;
-                    isStunned = true;
-                    StopCharge();
-                    // Reset after a short delay (0.1 seconds)
-                        GetWorld()->GetTimerManager().SetTimer(
-                            CrashResetTimer,
-                            this,
-                            &APlayerCharacter::ResetCrashTrigger,
-                            0.1f,
-                            false
-                        );
+                    ABreakable_Collectable* collectable = Cast<ABreakable_Collectable>(hitActor);
+                    if (collectable)
+                    {
+                        collectable->GetDamaged(this, 2);
+                        StopCharge();
+                    }
+                }
+                
+                if(!hitActor->ActorHasTag("Breakable") && !hitActor->ActorHasTag("Enemy") && !hitActor->ActorHasTag("Collectable"))
+                {
+                    Crash();
                 }
             }
         }
@@ -207,6 +204,26 @@ void APlayerCharacter::Jump()
 }
 
 
+
+void APlayerCharacter::Crash()
+{
+    //play crash cam shake
+    APlayerCameraManager* camManager = GetWorld()->GetFirstPlayerController()->PlayerCameraManager;
+    camManager->StartCameraShake(crashCamShake, 1.0f);
+
+    GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "You hit a wall!");
+    triggerCrash = true;
+    isStunned = true;
+    StopCharge();
+    // Reset after a short delay (0.1 seconds)
+    GetWorld()->GetTimerManager().SetTimer(
+        CrashResetTimer,
+        this,
+        &APlayerCharacter::ResetCrashTrigger,
+        0.1f,
+        false
+    );
+}
 
 void APlayerCharacter::MoveForward(float Value)
 {
@@ -277,6 +294,11 @@ void APlayerCharacter::ResetCrashTrigger()
 void APlayerCharacter::ResetHurtTrigger()
 {
     triggerHurt = false;
+}
+
+void APlayerCharacter::CollectableRecieved()
+{
+    GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Cyan, "You got a collectable!");
 }
 
 void APlayerCharacter::ResetStompTrigger()
@@ -386,7 +408,8 @@ void APlayerCharacter::StompDamage()
                     ABreakable_Collectable* breakable = Cast<ABreakable_Collectable>(hitActor);
                     if (breakable)
                     {
-                        breakable->GetDamaged();
+                        breakable->GetDamaged(this, 1);
+                        GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Cyan, hitActor->GetFName().GetPlainNameString());
                     }
                 }
             }

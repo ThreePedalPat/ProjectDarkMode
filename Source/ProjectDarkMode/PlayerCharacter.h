@@ -115,6 +115,8 @@ public:
 
     void ResetHurtTrigger();
 
+    void CollectableRecieved();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -130,6 +132,7 @@ protected:
     FTimerHandle CrashResetTimer;
     FTimerHandle stompResetTimer;
     void Jump();
+    void Crash();
 
 private:
     float normalSpeed;

@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
+#include "PlayerCharacter.h"
+#include "RotatorComponent.h"
 #include "Breakable_Collectable.generated.h"
 
 UCLASS()
@@ -16,23 +18,26 @@ public:
 	// Sets default values for this actor's properties
 	ABreakable_Collectable();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trigger")
-	UBoxComponent* trigger;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
 	UStaticMeshComponent* mesh;
 
-	UPROPERTY(EditAnywhere)
+		UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage")
+	UMaterial* damagedMat;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotator")
+	FRotator rot;
+
 	int health;
 
-	void GetDamaged();
+	void GetDamaged(APlayerCharacter* character, int32 damage);
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void Collect(APlayerCharacter* character);
+
+	URotatorComponent* rotator;
 
 public:	
 	// Called every frame
