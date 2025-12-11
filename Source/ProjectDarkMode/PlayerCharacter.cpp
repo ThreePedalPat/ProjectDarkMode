@@ -8,9 +8,11 @@
 #include "StatComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
+#include "Kismet/GameplayStatics.h"
 #include "Camera/CameraShakeBase.h"
 #include "Camera/CameraTypes.h"
 #include "PushableActor.h"
+#include "GameManager.h"
 #include "StompParticlesHelper.h"
 #include "Breakable_Collectable.h"
 #include "Breakable.h"
@@ -299,6 +301,8 @@ void APlayerCharacter::ResetHurtTrigger()
 void APlayerCharacter::CollectableRecieved()
 {
     GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Cyan, "You got a collectable!");
+    AGameManager* gm = Cast<AGameManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AGameManager::StaticClass()));
+    gm->GemCollected();
 }
 
 void APlayerCharacter::ResetStompTrigger()
